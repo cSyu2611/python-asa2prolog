@@ -9,39 +9,39 @@ def mystrip(str):
 
 
 def write_sentence(sentence):
-    return "sentence(" + sentence + ")."
+    return "sentence(" + sentence + ")"
 
 
 def write_semantic(semantic):
-    return "semantic(" + semantic + ")."
+    return "semantic(" + semantic + ")"
 
 
 def write_phrase(phrase):
-    return "phrase(" + phrase + ")."
+    return "phrase(" + phrase + ")"
 
 
 def write_main(phrase, main):
-    return "main(" + phrase + "," + main + ")."
+    return "main(" + phrase + "," + main + ")"
 
 
 def write_part(phrase, part):
-    return "part(" + phrase + "," + part + ")."
+    return "part(" + phrase + "," + part + ")"
 
 
 def write_role(phrase, role):
-    return "role(" + phrase + "," + role + ")."
+    return "role(" + phrase + "," + role + ")"
 
 
 def write_morpheme(word, morpheme):
-    return "morpheme(" + word + "," + morpheme + ")."
+    return "morpheme(" + word + "," + morpheme + ")"
 
 
 def write_type(phrase, type_):
-    return "type(" + phrase + "," + type_ + ")."
+    return "type(" + phrase + "," + type_ + ")"
 
 
 def write_class(word, class_):
-    return "class(" + word + "," + class_ + ")."
+    return "class(" + word + "," + class_ + ")"
 
 # コンストラクタ引数: ASAのインスタンス
 # フロー:
@@ -90,36 +90,33 @@ class AsaToPrologConverter():
     def convert(self, input_string):
         analyze_result = self.analyze(input_string)
         dc = self.get_dictionary(analyze_result)
-        buf = []
         ids = []
-        buf.append(write_sentence(dc["sentence"]))
+        yield write_sentence(dc["sentence"])
 
         for idcount in range(len(dc)-1):
             ids.append(dc["ID{}".format(str(idcount))])
 
         for i in range(len(ids)):
-            buf.append(write_type(ids[i]["phrase"], ids[i]["type"]))
+            yield write_type(ids[i]["phrase"], ids[i]["type"])
             if "semantic" in ids[i]:
                 for sems in ids[i]["semantic"].split("-"):
-                    buf.append(write_semantic(sems.replace("・", "or")))
+                    yield write_semantic(sems.replace("・", "or"))
 
             if "semrole" in ids[i]:
-                buf.append(write_role(
-                    ids[i]["phrase"], ids[i]["semrole"].split("（")[0]))
+                yield write_role(
+                    ids[i]["phrase"], ids[i]["semrole"].split("（")[0])
 
             for ii in range(2):
                 if ii == 0 and ("main" in ids[i]):
-                    buf.append(write_main(ids[i]["phrase"], ids[i]["main"]))
+                    yield write_main(ids[i]["phrase"], ids[i]["main"])
                     for iii in range(len(ids[i]["morphemes"])):
                         if ids[i]["morphemes"][iii][3] in ids[i]["main"]:
-                            buf.append(write_class(
-                                ids[i]["main"], ids[i]["morphemes"][iii][4]))
+                            yield write_class(
+                                ids[i]["main"], ids[i]["morphemes"][iii][4])
 
                 if ii == 1 and ("part" in ids[i]):
-                    buf.append(write_part(ids[i]["phrase"], ids[i]["part"]))
+                    yield write_part(ids[i]["phrase"], ids[i]["part"])
                     for iii in range(len(ids[i]["morphemes"])):
                         if ids[i]["morphemes"][iii][3] in ids[i]["part"]:
-                            buf.append(write_class(
-                                ids[i]["part"], ids[i]["morphemes"][iii][4]))
-
-        return buf
+                            yield write_class(
+                                ids[i]["part"], ids[i]["morphemes"][iii][4])
